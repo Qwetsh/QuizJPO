@@ -272,16 +272,20 @@ button.danger:hover:not(:disabled) { background: #fef2f2; }
 }
 
 @media print {
-  body * { visibility: hidden; }
-  .qr-print, .qr-print * { visibility: visible; }
-  .qr-print {
+  .no-print { display: none !important; }
+
+  /* Quand la modale QR de l'admin est ouverte, on n'imprime QUE le QR.
+     Scopé via :has() pour ne pas casser la page /imprimer. */
+  body:has(.modal-backdrop .qr-print) * { visibility: hidden; }
+  body:has(.modal-backdrop .qr-print) .qr-print,
+  body:has(.modal-backdrop .qr-print) .qr-print * { visibility: visible; }
+  body:has(.modal-backdrop .qr-print) .qr-print {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     text-align: center;
   }
-  .no-print { display: none !important; }
 }
 
 /* ====================================================================
