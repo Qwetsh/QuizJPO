@@ -91,8 +91,10 @@ function AdminPanel({ email, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null) // null | question | 'new'
   const [seeding, setSeeding] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const [showQrFor, setShowQrFor] = useState(null)
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
 
   async function load() {
     setLoading(true)
@@ -123,6 +125,29 @@ function AdminPanel({ email, onLogout }) {
     } catch (e) {
       console.error(e)
       setError('Suppression impossible.')
+    }
+  }
+
+  async function resetLeaderboard() {
+    const confirmation = window.prompt(
+      'Cela va SUPPRIMER tous les pseudos et scores des participants (les questions ne sont pas touchées).\n\nTape RESET en majuscules pour confirmer.',
+    )
+    if (confirmation !== 'RESET') return
+    setResetting(true)
+    setError('')
+    setInfo('')
+    try {
+      const { error, count } = await supabase
+        .from('quiz_jpo_participants')
+        .delete({ count: 'exact' })
+        .gte('created_at', '1970-01-01')
+      if (error) throw error
+      setInfo(`Classement réinitialisé (${count ?? 0} participant(s) supprimé(s)).`)
+    } catch (e) {
+      console.error(e)
+      setError('Reset impossible : ' + (e.message || 'erreur inconnue'))
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -158,10 +183,14 @@ function AdminPanel({ email, onLogout }) {
         <button onClick={seedDefaults} disabled={seeding}>
           {seeding ? '…' : 'Charger les questions par défaut'}
         </button>
+        <button className="danger" onClick={resetLeaderboard} disabled={resetting}>
+          {resetting ? '…' : '🗑️ Réinitialiser le classement'}
+        </button>
         <Link to="/classement" className="link-button">🏆 Classement</Link>
         <Link to="/" className="link-button">Quiz</Link>
       </div>
 
+      {info && <p className="correct">{info}</p>}
       {error && <p className="error">{error}</p>}
 
       {editing && (
