@@ -1,0 +1,10 @@
+node_modules
+dist
+.env.local
+.firebase
+*.log
+.DS_Store
+
+# Note : le fichier .env (config Firebase publique) est volontairement
+# committé. Les clés Web Firebase sont conçues pour être publiques —
+# la sécurité passe par les règles Firestore.
