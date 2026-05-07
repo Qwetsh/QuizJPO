@@ -109,7 +109,9 @@ export default function Print() {
                 <span className="qr-card-num">#{q.display_order}</span>
               </header>
               <div className="qr-card-body">
-                <h2 className="qr-card-title">{q.name}</h2>
+                {/* Le nom est masqué à l'impression pour ne pas spoiler la réponse,
+                    mais reste visible à l'écran pour que tu identifies les cartes. */}
+                <h2 className="qr-card-title no-print">{q.name}</h2>
                 <div className="qr-card-qr">
                   <QRCodeSVG value={url} size={220} includeMargin level="M" />
                 </div>
