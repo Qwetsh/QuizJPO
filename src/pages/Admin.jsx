@@ -1,23 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, doc, getDocs, setDoc, deleteDoc, query, orderBy, writeBatch } from 'firebase/firestore'
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
 import { QRCodeSVG } from 'qrcode.react'
-import { db, auth } from '../lib/firebase'
+import { supabase } from '../lib/supabase'
 import { isMobileDevice } from '../lib/isMobile'
 import { defaultQuestions } from '../lib/defaultQuestions'
 
 export default function Admin() {
-  const [adminUser, setAdminUser] = useState(null)
+  const [session, setSession] = useState(null)
   const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
-      // Seul un compte avec email (créé en console Firebase) est admin.
-      // Les comptes anonymes (élèves) n'ont pas d'email.
-      setAdminUser(u && u.email ? u : null)
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
       setAuthChecked(true)
     })
+    const { data: sub } = supabase.auth.onAuthStateChange((_, s) => setSession(s))
+    return () => sub.subscription.unsubscribe()
   }, [])
 
   if (isMobileDevice()) {
@@ -34,9 +32,9 @@ export default function Admin() {
     return <div className="container"><p className="muted">Chargement…</p></div>
   }
 
-  if (!adminUser) return <AdminLogin />
+  if (!session) return <AdminLogin />
 
-  return <AdminPanel admin={adminUser} onLogout={() => signOut(auth)} />
+  return <AdminPanel email={session.user.email} onLogout={() => supabase.auth.signOut()} />
 }
 
 function AdminLogin() {
@@ -50,7 +48,8 @@ function AdminLogin() {
     setError('')
     setLoading(true)
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
     } catch (e) {
       console.error(e)
       setError('Identifiants invalides.')
@@ -87,7 +86,7 @@ function AdminLogin() {
   )
 }
 
-function AdminPanel({ admin, onLogout }) {
+function AdminPanel({ email, onLogout }) {
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null) // null | question | 'new'
@@ -99,9 +98,12 @@ function AdminPanel({ admin, onLogout }) {
     setLoading(true)
     setError('')
     try {
-      const q = query(collection(db, 'questions'), orderBy('order'))
-      const snap = await getDocs(q)
-      setQuestions(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      const { data, error } = await supabase
+        .from('quiz_jpo_questions')
+        .select('*')
+        .order('display_order')
+      if (error) throw error
+      setQuestions(data || [])
     } catch (e) {
       console.error(e)
       setError('Impossible de charger les questions.')
@@ -115,7 +117,8 @@ function AdminPanel({ admin, onLogout }) {
   async function remove(id) {
     if (!window.confirm(`Supprimer la question "${id}" ?`)) return
     try {
-      await deleteDoc(doc(db, 'questions', id))
+      const { error } = await supabase.from('quiz_jpo_questions').delete().eq('id', id)
+      if (error) throw error
       load()
     } catch (e) {
       console.error(e)
@@ -127,12 +130,10 @@ function AdminPanel({ admin, onLogout }) {
     if (!window.confirm(`Cela va créer/écraser ${defaultQuestions.length} questions par défaut. Continuer ?`)) return
     setSeeding(true)
     try {
-      const batch = writeBatch(db)
-      for (const q of defaultQuestions) {
-        const { id, ...data } = q
-        batch.set(doc(db, 'questions', id), data)
-      }
-      await batch.commit()
+      const { error } = await supabase
+        .from('quiz_jpo_questions')
+        .upsert(defaultQuestions, { onConflict: 'id' })
+      if (error) throw error
       await load()
     } catch (e) {
       console.error(e)
@@ -146,8 +147,8 @@ function AdminPanel({ admin, onLogout }) {
     <div className="container admin">
       <header className="topbar">
         <h1>Administration</h1>
-        <div className="row">
-          <span className="muted">{admin.email}</span>
+        <div className="row gap">
+          <span className="muted">{email}</span>
           <button onClick={onLogout}>Déconnexion</button>
         </div>
       </header>
@@ -190,11 +191,11 @@ function AdminPanel({ admin, onLogout }) {
           <tbody>
             {questions.map((q) => (
               <tr key={q.id}>
-                <td>{q.order}</td>
+                <td>{q.display_order}</td>
                 <td><code>{q.id}</code></td>
                 <td>{q.name}</td>
                 <td>{q.prompt}</td>
-                <td>{q.correctAnswer}</td>
+                <td>{q.correct_answer}</td>
                 <td className="row gap">
                   <button onClick={() => setEditing(q)}>Éditer</button>
                   <button onClick={() => setShowQrFor(q)}>QR</button>
@@ -219,8 +220,8 @@ function QuestionEditor({ question, onClose, onSaved }) {
   const [prompt, setPrompt] = useState(question?.prompt || 'À quelle espèce appartient ce crâne ?')
   const initialChoices = question?.choices?.length === 4 ? question.choices : ['', '', '', '']
   const [choices, setChoices] = useState(initialChoices)
-  const [correctAnswer, setCorrectAnswer] = useState(question?.correctAnswer || '')
-  const [order, setOrder] = useState(question?.order ?? 0)
+  const [correctAnswer, setCorrectAnswer] = useState(question?.correct_answer || '')
+  const [order, setOrder] = useState(question?.display_order ?? 0)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -248,13 +249,17 @@ function QuestionEditor({ question, onClose, onSaved }) {
 
     setSaving(true)
     try {
-      await setDoc(doc(db, 'questions', id), {
-        name: name.trim(),
-        prompt: prompt.trim(),
-        choices: trimmedChoices,
-        correctAnswer: correctAnswer.trim(),
-        order: Number(order) || 0,
-      })
+      const { error } = await supabase
+        .from('quiz_jpo_questions')
+        .upsert({
+          id,
+          name: name.trim(),
+          prompt: prompt.trim(),
+          choices: trimmedChoices,
+          correct_answer: correctAnswer.trim(),
+          display_order: Number(order) || 0,
+        }, { onConflict: 'id' })
+      if (error) throw error
       onSaved()
     } catch (e) {
       console.error(e)

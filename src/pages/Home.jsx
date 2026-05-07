@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db, ensureAnonymousAuth } from '../lib/firebase'
+import { supabase, getOrCreateLocalParticipantId } from '../lib/supabase'
 
 export default function Home() {
   const [searchParams] = useSearchParams()
   const questionId = searchParams.get('q')
 
-  const [authUser, setAuthUser] = useState(null)
+  const [participantId] = useState(() => getOrCreateLocalParticipantId())
   const [participantData, setParticipantData] = useState(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState('')
@@ -23,24 +22,25 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false
-    async function init() {
+    ;(async () => {
       try {
-        const user = await ensureAnonymousAuth()
+        const { data, error } = await supabase
+          .from('quiz_jpo_participants')
+          .select('pseudo, score, answered')
+          .eq('id', participantId)
+          .maybeSingle()
         if (cancelled) return
-        setAuthUser(user)
-        const snap = await getDoc(doc(db, 'participants', user.uid))
-        if (cancelled) return
-        if (snap.exists()) setParticipantData(snap.data())
+        if (error) throw error
+        if (data) setParticipantData(data)
       } catch (e) {
         console.error(e)
         if (!cancelled) setError('Connexion impossible. Vérifie ta connexion internet.')
       } finally {
         if (!cancelled) setReady(true)
       }
-    }
-    init()
+    })()
     return () => { cancelled = true }
-  }, [])
+  }, [participantId])
 
   useEffect(() => {
     if (!questionId || !ready) return
@@ -51,10 +51,15 @@ export default function Home() {
     setJustAnswered(null)
     ;(async () => {
       try {
-        const snap = await getDoc(doc(db, 'questions', questionId))
+        const { data, error } = await supabase
+          .from('quiz_jpo_questions')
+          .select('*')
+          .eq('id', questionId)
+          .maybeSingle()
         if (cancelled) return
-        if (snap.exists()) {
-          setQuestion({ id: snap.id, ...snap.data() })
+        if (error) throw error
+        if (data) {
+          setQuestion(data)
         } else {
           setError('Cette question n\'existe pas. Vérifie le QR code.')
         }
@@ -78,15 +83,11 @@ export default function Home() {
     }
     setSavingPseudo(true)
     try {
-      const data = {
-        pseudo: trimmed,
-        score: 0,
-        answered: {},
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }
-      await setDoc(doc(db, 'participants', authUser.uid), data)
-      setParticipantData(data)
+      const { error } = await supabase
+        .from('quiz_jpo_participants')
+        .insert({ id: participantId, pseudo: trimmed })
+      if (error) throw error
+      setParticipantData({ pseudo: trimmed, score: 0, answered: {} })
     } catch (e) {
       console.error(e)
       setError('Impossible d\'enregistrer le pseudo.')
@@ -100,14 +101,14 @@ export default function Home() {
     setSubmitting(true)
     setError('')
     try {
-      const isCorrect = selectedAnswer === question.correctAnswer
+      const isCorrect = selectedAnswer === question.correct_answer
       const newAnswered = { ...(participantData.answered || {}), [question.id]: isCorrect }
       const newScore = (participantData.score || 0) + (isCorrect ? 1 : 0)
-      await updateDoc(doc(db, 'participants', authUser.uid), {
-        answered: newAnswered,
-        score: newScore,
-        updatedAt: serverTimestamp(),
-      })
+      const { error } = await supabase
+        .from('quiz_jpo_participants')
+        .update({ score: newScore, answered: newAnswered })
+        .eq('id', participantId)
+      if (error) throw error
       setParticipantData({ ...participantData, answered: newAnswered, score: newScore })
       setJustAnswered({ correct: isCorrect, chosen: selectedAnswer })
     } catch (e) {
@@ -122,7 +123,6 @@ export default function Home() {
     return <div className="container"><p className="muted">Chargement…</p></div>
   }
 
-  // Bandeau de score commun
   const Header = () => participantData && (
     <header className="topbar">
       <span className="pseudo">👤 {participantData.pseudo}</span>
@@ -130,7 +130,6 @@ export default function Home() {
     </header>
   )
 
-  // Étape 1 : pseudo manquant
   if (!participantData) {
     return (
       <div className="container">
@@ -155,7 +154,6 @@ export default function Home() {
     )
   }
 
-  // Étape 2 : on a un pseudo, mais pas de QR code scanné → écran d'accueil
   if (!questionId) {
     return (
       <div className="container">
@@ -169,7 +167,6 @@ export default function Home() {
     )
   }
 
-  // Étape 3 : un QR code a été scanné
   if (loadingQuestion) {
     return (
       <div className="container">
@@ -202,7 +199,7 @@ export default function Home() {
         <p className={previousAnswer ? 'correct' : 'incorrect'}>
           {previousAnswer ? '✓ Tu avais trouvé la bonne réponse !' : '✗ Tu n\'avais pas trouvé.'}
         </p>
-        <p>C'était : <strong>{question.name}</strong> ({question.correctAnswer})</p>
+        <p>C'était : <strong>{question.name}</strong> ({question.correct_answer})</p>
         <p className="muted">Scanne un autre QR code pour continuer.</p>
         <Link to="/classement" className="link-button">🏆 Voir le classement</Link>
       </div>
@@ -216,7 +213,7 @@ export default function Home() {
         <h2 className={justAnswered.correct ? 'correct' : 'incorrect'}>
           {justAnswered.correct ? '🎉 Bonne réponse !' : '❌ Mauvaise réponse'}
         </h2>
-        <p>C'était : <strong>{question.name}</strong> ({question.correctAnswer})</p>
+        <p>C'était : <strong>{question.name}</strong> ({question.correct_answer})</p>
         {!justAnswered.correct && (
           <p className="muted">Tu avais répondu : {justAnswered.chosen}</p>
         )}

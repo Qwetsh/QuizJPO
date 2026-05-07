@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
 import { Link } from 'react-router-dom'
-import { db } from '../lib/firebase'
+import { supabase } from '../lib/supabase'
 
 export default function Leaderboard() {
   const [participants, setParticipants] = useState([])
@@ -12,10 +11,15 @@ export default function Leaderboard() {
     let cancelled = false
     ;(async () => {
       try {
-        const q = query(collection(db, 'participants'), orderBy('score', 'desc'), limit(100))
-        const snap = await getDocs(q)
+        const { data, error } = await supabase
+          .from('quiz_jpo_participants')
+          .select('id, pseudo, score')
+          .order('score', { ascending: false })
+          .order('updated_at', { ascending: true })
+          .limit(100)
         if (cancelled) return
-        setParticipants(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+        if (error) throw error
+        setParticipants(data || [])
       } catch (e) {
         console.error(e)
         if (!cancelled) setError('Impossible de charger le classement.')
