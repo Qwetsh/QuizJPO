@@ -4,17 +4,14 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { isMobileDevice } from '../lib/isMobile'
 
-const CATEGORY_LABELS = {
-  'lame-': { emoji: '🔬', label: 'Microscope' },
-  'crane-': { emoji: '🦴', label: 'Ostéologie' },
-  'fossile-': { emoji: '🪨', label: 'Paléontologie' },
+const CATEGORY_EMOJI = {
+  'Microscope': '🔬',
+  'Ostéologie': '🦴',
+  'Paléontologie': '🪨',
 }
 
-function categoryFor(id) {
-  for (const [prefix, info] of Object.entries(CATEGORY_LABELS)) {
-    if (id.startsWith(prefix)) return info
-  }
-  return { emoji: '❓', label: 'Quiz' }
+function emojiFor(category) {
+  return CATEGORY_EMOJI[category] || '📌'
 }
 
 export default function Print() {
@@ -40,7 +37,7 @@ export default function Print() {
       try {
         const { data, error } = await supabase
           .from('quiz_jpo_questions')
-          .select('id, name, display_order')
+          .select('id, name, category, display_order')
           .order('display_order')
         if (cancelled) return
         if (error) throw error
@@ -102,13 +99,13 @@ export default function Print() {
 
       <div className="print-sheet">
         {questions.map((q) => {
-          const cat = categoryFor(q.id)
           const url = `${window.location.origin}${import.meta.env.BASE_URL}?q=${q.id}`
+          const cat = q.category || ''
           return (
             <article key={q.id} className="qr-card">
               <header className="qr-card-header">
-                <span className="qr-card-emoji">{cat.emoji}</span>
-                <span className="qr-card-cat">{cat.label}</span>
+                <span className="qr-card-emoji">{emojiFor(cat)}</span>
+                <span className="qr-card-cat">{cat || 'Quiz'}</span>
                 <span className="qr-card-num">#{q.display_order}</span>
               </header>
               <div className="qr-card-body">
@@ -117,7 +114,7 @@ export default function Print() {
                   <QRCodeSVG value={url} size={220} includeMargin level="M" />
                 </div>
                 <p className="qr-card-instruction">
-                  📷 Scanne avec ton téléphone pour répondre
+                  📷 Scannez avec votre téléphone pour répondre
                 </p>
               </div>
               <footer className="qr-card-footer">

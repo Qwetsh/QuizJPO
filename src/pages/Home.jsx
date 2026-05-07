@@ -78,7 +78,7 @@ export default function Home() {
     setError('')
     const trimmed = pseudo.trim()
     if (trimmed.length < 2 || trimmed.length > 20) {
-      setError('Le pseudo doit faire entre 2 et 20 caractères.')
+      setError('Votre pseudo doit faire entre 2 et 20 caractères.')
       return
     }
     setSavingPseudo(true)
@@ -113,7 +113,7 @@ export default function Home() {
       setJustAnswered({ correct: isCorrect, chosen: selectedAnswer })
     } catch (e) {
       console.error(e)
-      setError('Impossible d\'enregistrer la réponse. Réessaie.')
+      setError('Impossible d\'enregistrer la réponse. Réessayez.')
     } finally {
       setSubmitting(false)
     }
@@ -134,13 +134,13 @@ export default function Home() {
     return (
       <div className="container">
         <h1>Bienvenue !</h1>
-        <p>Choisis un pseudo pour commencer le quiz de la JPO.</p>
+        <p>Choisissez un pseudo pour commencer le quiz de la JPO.</p>
         <form onSubmit={submitPseudo}>
           <input
             type="text"
             value={pseudo}
             onChange={(e) => setPseudo(e.target.value)}
-            placeholder="Ton pseudo"
+            placeholder="Votre pseudo"
             maxLength={20}
             autoFocus
             required
@@ -158,9 +158,9 @@ export default function Home() {
     return (
       <div className="container">
         <Header />
-        <h1>À toi de jouer !</h1>
-        <p>Scanne un QR code à côté d'un objet pour répondre à une question.</p>
-        <p className="muted">Ton score augmente d'un point par bonne réponse.</p>
+        <h1>À vous de jouer !</h1>
+        <p>Scannez un QR code à côté d'un objet pour répondre à une question.</p>
+        <p className="muted">Votre score augmente d'un point par bonne réponse.</p>
         <Link to="/classement" className="link-button">🏆 Voir le classement</Link>
         {error && <p className="error">{error}</p>}
       </div>
@@ -195,12 +195,12 @@ export default function Home() {
     return (
       <div className="container">
         <Header />
-        <h2>Tu as déjà répondu à cette question</h2>
+        <h2>Vous avez déjà répondu à cette question</h2>
         <p className={previousAnswer ? 'correct' : 'incorrect'}>
-          {previousAnswer ? '✓ Tu avais trouvé la bonne réponse !' : '✗ Tu n\'avais pas trouvé.'}
+          {previousAnswer ? '✓ Vous aviez trouvé la bonne réponse !' : '✗ Vous n\'aviez pas trouvé.'}
         </p>
         <p>C'était : <strong>{question.name}</strong> ({question.correct_answer})</p>
-        <p className="muted">Scanne un autre QR code pour continuer.</p>
+        <p className="muted">Scannez un autre QR code pour continuer.</p>
         <Link to="/classement" className="link-button">🏆 Voir le classement</Link>
       </div>
     )
@@ -215,9 +215,9 @@ export default function Home() {
         </h2>
         <p>C'était : <strong>{question.name}</strong> ({question.correct_answer})</p>
         {!justAnswered.correct && (
-          <p className="muted">Tu avais répondu : {justAnswered.chosen}</p>
+          <p className="muted">Vous aviez répondu : {justAnswered.chosen}</p>
         )}
-        <p className="muted">Scanne un autre QR code pour continuer.</p>
+        <p className="muted">Scannez un autre QR code pour continuer.</p>
         <Link to="/classement" className="link-button">🏆 Voir le classement</Link>
       </div>
     )

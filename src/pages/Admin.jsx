@@ -212,6 +212,7 @@ function AdminPanel({ email, onLogout }) {
             <tr>
               <th>#</th>
               <th>ID (slug)</th>
+              <th>Catégorie</th>
               <th>Nom interne</th>
               <th>Question</th>
               <th>Bonne réponse</th>
@@ -223,6 +224,7 @@ function AdminPanel({ email, onLogout }) {
               <tr key={q.id}>
                 <td>{q.display_order}</td>
                 <td><code>{q.id}</code></td>
+                <td>{q.category || <span className="muted">—</span>}</td>
                 <td>{q.name}</td>
                 <td>{q.prompt}</td>
                 <td>{q.correct_answer}</td>
@@ -234,7 +236,7 @@ function AdminPanel({ email, onLogout }) {
               </tr>
             ))}
             {questions.length === 0 && (
-              <tr><td colSpan="6" className="muted">Aucune question. Crées-en une ou charge celles par défaut.</td></tr>
+              <tr><td colSpan="7" className="muted">Aucune question. Crées-en une ou charge celles par défaut.</td></tr>
             )}
           </tbody>
         </table>
@@ -243,10 +245,13 @@ function AdminPanel({ email, onLogout }) {
   )
 }
 
+const KNOWN_CATEGORIES = ['Microscope', 'Ostéologie', 'Paléontologie']
+
 function QuestionEditor({ question, onClose, onSaved }) {
   const isNew = !question
   const [id, setId] = useState(question?.id || '')
   const [name, setName] = useState(question?.name || '')
+  const [category, setCategory] = useState(question?.category || '')
   const [prompt, setPrompt] = useState(question?.prompt || 'À quelle espèce appartient ce crâne ?')
   const initialChoices = question?.choices?.length === 4 ? question.choices : ['', '', '', '']
   const [choices, setChoices] = useState(initialChoices)
@@ -284,6 +289,7 @@ function QuestionEditor({ question, onClose, onSaved }) {
         .upsert({
           id,
           name: name.trim(),
+          category: category.trim(),
           prompt: prompt.trim(),
           choices: trimmedChoices,
           correct_answer: correctAnswer.trim(),
@@ -323,6 +329,19 @@ function QuestionEditor({ question, onClose, onSaved }) {
             placeholder="Crâne de cheval"
             required
           />
+        </label>
+
+        <label>
+          Catégorie (affichée sur la fiche imprimée)
+          <input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Ostéologie, Microscope, Paléontologie…"
+            list="quiz-jpo-categories"
+          />
+          <datalist id="quiz-jpo-categories">
+            {KNOWN_CATEGORIES.map((c) => <option key={c} value={c} />)}
+          </datalist>
         </label>
 
         <label>

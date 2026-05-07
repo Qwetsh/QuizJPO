@@ -5,6 +5,7 @@ export const defaultQuestions = [
   {
     id: 'lame-sang',
     name: 'Lame de sang',
+    category: 'Microscope',
     prompt: 'Que peut-on observer sur cette lame ?',
     choices: ['Sang', 'Salive', 'Cellules de peau', 'Tissu musculaire'],
     correct_answer: 'Sang',
@@ -13,6 +14,7 @@ export const defaultQuestions = [
   {
     id: 'lame-pollen-carex',
     name: 'Lame de pollen de carex',
+    category: 'Microscope',
     prompt: 'À quelle plante appartient ce pollen ?',
     choices: ['Carex', 'Chêne', 'Pin', 'Tournesol'],
     correct_answer: 'Carex',
@@ -21,6 +23,7 @@ export const defaultQuestions = [
   {
     id: 'lame-pollen-chene',
     name: 'Lame de pollen de chêne',
+    category: 'Microscope',
     prompt: 'À quelle plante appartient ce pollen ?',
     choices: ['Chêne', 'Carex', 'Lavande', 'Bouleau'],
     correct_answer: 'Chêne',
@@ -29,6 +32,7 @@ export const defaultQuestions = [
   {
     id: 'lame-branchie-poisson',
     name: 'Lame de branchie de poisson',
+    category: 'Microscope',
     prompt: 'Quel organe peut-on observer sur cette lame ?',
     choices: ['Branchie de poisson', 'Poumon', 'Foie', 'Estomac'],
     correct_answer: 'Branchie de poisson',
@@ -37,6 +41,7 @@ export const defaultQuestions = [
   {
     id: 'crane-cheval',
     name: 'Crâne de cheval',
+    category: 'Ostéologie',
     prompt: 'À quelle espèce appartient ce crâne ?',
     choices: ['Cheval', 'Vache', 'Chien', 'Sanglier'],
     correct_answer: 'Cheval',
@@ -45,6 +50,7 @@ export const defaultQuestions = [
   {
     id: 'crane-vache',
     name: 'Crâne de vache',
+    category: 'Ostéologie',
     prompt: 'À quelle espèce appartient ce crâne ?',
     choices: ['Vache', 'Cheval', 'Cerf', 'Mouton'],
     correct_answer: 'Vache',
@@ -53,6 +59,7 @@ export const defaultQuestions = [
   {
     id: 'crane-pigeon',
     name: 'Crâne de pigeon',
+    category: 'Ostéologie',
     prompt: 'À quelle espèce appartient ce crâne ?',
     choices: ['Pigeon', 'Corneille', 'Pie', 'Mouette'],
     correct_answer: 'Pigeon',
@@ -61,6 +68,7 @@ export const defaultQuestions = [
   {
     id: 'crane-lapin',
     name: 'Crâne de lapin',
+    category: 'Ostéologie',
     prompt: 'À quelle espèce appartient ce crâne ?',
     choices: ['Lapin', 'Lièvre', 'Rat', 'Hamster'],
     correct_answer: 'Lapin',
@@ -69,6 +77,7 @@ export const defaultQuestions = [
   {
     id: 'crane-chat',
     name: 'Crâne de chat',
+    category: 'Ostéologie',
     prompt: 'À quelle espèce appartient ce crâne ?',
     choices: ['Chat', 'Renard', 'Furet', 'Chien'],
     correct_answer: 'Chat',
@@ -77,6 +86,7 @@ export const defaultQuestions = [
   {
     id: 'fossile-ammonite',
     name: 'Fossile d\'ammonite',
+    category: 'Paléontologie',
     prompt: 'Quel fossile est-ce ?',
     choices: ['Ammonite', 'Bélemnite', 'Trilobite', 'Coquille d\'huître'],
     correct_answer: 'Ammonite',
@@ -85,6 +95,7 @@ export const defaultQuestions = [
   {
     id: 'fossile-fougere',
     name: 'Fossile de fougère',
+    category: 'Paléontologie',
     prompt: 'Quel fossile est-ce ?',
     choices: ['Fougère', 'Algue', 'Coraux', 'Mousse'],
     correct_answer: 'Fougère',
@@ -93,6 +104,7 @@ export const defaultQuestions = [
   {
     id: 'fossile-coraux',
     name: 'Fossile de coraux',
+    category: 'Paléontologie',
     prompt: 'Quel fossile est-ce ?',
     choices: ['Coraux', 'Éponge', 'Algue calcaire', 'Bryozoaire'],
     correct_answer: 'Coraux',
@@ -101,6 +113,7 @@ export const defaultQuestions = [
   {
     id: 'fossile-belemnite',
     name: 'Fossile de bélemnite',
+    category: 'Paléontologie',
     prompt: 'Quel fossile est-ce ?',
     choices: ['Bélemnite', 'Ammonite', 'Os', 'Dent de requin'],
     correct_answer: 'Bélemnite',
@@ -109,6 +122,7 @@ export const defaultQuestions = [
   {
     id: 'fossile-trilobite',
     name: 'Fossile de trilobite',
+    category: 'Paléontologie',
     prompt: 'Quel fossile est-ce ?',
     choices: ['Trilobite', 'Crustacé moderne', 'Insecte', 'Mille-pattes'],
     correct_answer: 'Trilobite',
