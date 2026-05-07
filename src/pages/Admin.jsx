@@ -186,6 +186,7 @@ function AdminPanel({ email, onLogout }) {
         <button className="danger" onClick={resetLeaderboard} disabled={resetting}>
           {resetting ? '…' : '🗑️ Réinitialiser le classement'}
         </button>
+        <Link to="/imprimer" className="link-button">🖨️ Imprimer tous les QR codes</Link>
         <Link to="/classement" className="link-button">🏆 Classement</Link>
         <Link to="/" className="link-button">Quiz</Link>
       </div>

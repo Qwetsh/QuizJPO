@@ -283,3 +283,134 @@ button.danger:hover:not(:disabled) { background: #fef2f2; }
   }
   .no-print { display: none !important; }
 }
+
+/* ====================================================================
+   Page d'impression de tous les QR codes (/imprimer)
+   2 cartes par feuille A4 portrait, ligne pointillée pour découper
+   ==================================================================== */
+
+.print-root {
+  background: #f4f6fa;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+.print-toolbar {
+  max-width: 21cm;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 0.85rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.print-sheet {
+  max-width: 21cm;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.qr-card {
+  width: 100%;
+  height: 14.85cm; /* moitié d'une A4 portrait */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 1.2cm 1.5cm;
+  border-bottom: 2px dashed #cbd5e1;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  position: relative;
+  background:
+    radial-gradient(circle at top right, #eff6ff 0%, transparent 60%),
+    radial-gradient(circle at bottom left, #fef3c7 0%, transparent 50%),
+    white;
+}
+
+.qr-card:last-child { border-bottom: none; }
+
+/* Saut de page après chaque deuxième carte */
+.qr-card:nth-child(2n) {
+  page-break-after: always;
+  break-after: page;
+}
+
+.qr-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.qr-card-emoji { font-size: 1.4rem; }
+.qr-card-cat { flex: 1; }
+.qr-card-num {
+  background: #2563eb;
+  color: white;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+}
+
+.qr-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+}
+
+.qr-card-title {
+  margin: 0;
+  font-size: 1.7rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.qr-card-qr {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  line-height: 0;
+}
+
+.qr-card-instruction {
+  margin: 0;
+  font-size: 1rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.qr-card-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  body { background: white; }
+  .print-root { padding: 0; background: white; }
+  .print-sheet { border: none; border-radius: 0; max-width: 100%; }
+  .qr-card {
+    border-bottom: 1.5px dashed #94a3b8;
+    width: 21cm;
+    height: 14.85cm;
+  }
+  .qr-card:nth-child(2n) { border-bottom: none; }
+}
